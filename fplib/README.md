@@ -12,3 +12,8 @@ A tool, `fptool`, allows merging different files, exporting the
 footprints in GeoJSON format (with or without pretty-printing),
 drawing them as SVG or dumping their contexts in human-readable text
 form.
+
+# Changes
+
+- 0.2: Use anyhow for errors, reorganize into workspace
+- 0.1: Initial version
