@@ -2,6 +2,8 @@
 name = "fptool"
 edition = "2021"
 version.workspace = true
+description.workspace = true
+license.workspace = true
 
 [dependencies]
 footprint = { workspace = true }
