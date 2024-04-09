@@ -3,27 +3,27 @@ resolver = "2"
 members = ["fplib","fptool"]
 
 [workspace.package]
-version = "0.2.1"
+version = "0.2.3"
 authors = ["Berke DURAK <bd@exhrd.fr>"]
 license = "Apache-2.0 OR MIT"
 readme = "README.md"
 description = "Simplified format for Earth remote sensing instrument footprints"
 repository = "https://github.com/berke/footprint"
-edition = "2021"
+edition = "2024"
 rust-version = "1.72"
 
 [workspace.dependencies]
-serde = { version = "1.0", features = ["derive"] }
-ron = { version = "^0.6" }
-json = { version = "^0.11" }
-chrono = { version = "=0.4.26" }
+serde = { version = "^1.0", features = ["derive"] }
+ron = { version = "^0.12" }
+json = { version = "^0.12" }
+chrono = { version = "^0.4" }
 serde_json = { version = "^1.0" }
 rmp-serde = { version = "^0.15" }
-geo = { version = "^0.16" }
-geo-clipper = { version = "^0.4" }
-geojson = { version = "^0.21" }
-xml-rs = { version = "0.8" }
-anyhow = { version = "1" }
+geo = { version = "^0.31" }
+geo-clipper = { version = "^0.9" }
+geojson = { version = "^0.24" }
+xml-rs = { version = "^1" }
+anyhow = { version = "^1" }
 
 [workspace.dependencies.footprint]
 path = "fplib"

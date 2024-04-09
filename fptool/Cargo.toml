@@ -9,8 +9,8 @@ license.workspace = true
 footprint = { workspace = true }
 clap = { version = "^2.33" }
 log = { version = "^0.4" }
-simple_logger = { version = "^4.2" }
-chrono = { version = "=0.4.26" }
+simple_logger = { version = "^5" }
+chrono = { workspace = true }
 
 [[bin]]
 name = "fptool"
