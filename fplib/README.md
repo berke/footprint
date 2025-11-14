@@ -15,5 +15,6 @@ form.
 
 # Changes
 
+- 0.2.3: Update depdendencies
 - 0.2: Use anyhow for errors, reorganize into workspace
 - 0.1: Initial version
