@@ -1,8 +1,10 @@
 #![allow(dead_code)]
 
-mod misc_error;
-
-use std::error::Error;
+use anyhow::{
+    anyhow,
+    Context,
+    Result,
+};
 use log::{trace,info};
 use clap::{Arg,App};
 use chrono::{Utc,TimeZone,NaiveDateTime,DateTime};
@@ -40,23 +42,39 @@ impl Stats {
     }
 }
 
-fn main()->Result<(),Box<dyn Error>> {
+fn main()->Result<()> {
     let args = App::new("fptool")
 	.arg(Arg::with_name("input").multiple(true))
-	.arg(Arg::with_name("concat").short("c").takes_value(true))
-	.arg(Arg::with_name("draw").short("d").takes_value(true))
-	.arg(Arg::with_name("export").short("e").takes_value(true))
-	.arg(Arg::with_name("dump").short("D").takes_value(true))
-	.arg(Arg::with_name("verbose").short("v"))
+	.arg(Arg::with_name("concat").short("c")
+	     .value_name("OUTPUT.mpk")
+	     .takes_value(true)
+	     .help("Concatenate multiple input MPK files"))
+	.arg(Arg::with_name("draw").short("d")
+	     .takes_value(true)
+	     .value_name("OUTPUT.svg")
+	     .help("Render footprints to an SVG file"))
+	.arg(Arg::with_name("export").short("e")
+	     .takes_value(true)
+	     .value_name("OUTPUT.geojson")
+	     .help("Export footprints as GeoJSON"))
+	.arg(Arg::with_name("dump").short("D")
+	     .value_name("OUTPUT.txt")
+	     .takes_value(true)
+	     .help("Dump contents as an indented text file"))
+	.arg(Arg::with_name("verbose").short("v")
+	     .help("Increase the detail level of printed messages"))
 	.arg(Arg::with_name("pretty").short("p")
-	     .help("Pretty-print JSON output"))
+	     .help("Pretty-print the JSON output"))
 	.arg(Arg::with_name("t_min").long("t-min")
+	     .value_name("Y-m-dTH:M:S")
 	     .help("Start of time range")
 	     .takes_value(true))
 	.arg(Arg::with_name("t_max").long("t-max")
+	     .value_name("Y-m-dTH:M:S")
 	     .help("End of time range")
 	     .takes_value(true))
 	.arg(Arg::with_name("decimate").long("decimate")
+	     .value_name("N")
 	     .help("Keep only every Nth footprint")
 	     .default_value("1").takes_value(true))
 	.get_matches();
@@ -88,9 +106,13 @@ fn main()->Result<(),Box<dyn Error>> {
 	    std::f64::INFINITY
 	};
 
-    let decimate : usize = args.value_of("decimate").unwrap().parse().expect("Invalid decimation value");
+    let decimate : usize = args.value_of("decimate")
+	.unwrap()
+	.parse()
+	.context("Invalid decimation value")?;
 
-    let fp_fns = args.values_of("input").expect("Specify footprint files");
+    let fp_fns = args.values_of("input")
+	.ok_or_else(|| anyhow!("Specify footprint files"))?;
     let mut n = 0;
     for fp_fn in fp_fns {
 	info!("Footprint file {}",fp_fn);
@@ -143,6 +165,7 @@ fn main()->Result<(),Box<dyn Error>> {
     }
 
     if let Some(dump_fn) = args.value_of("dump") {
+	info!("Dumping footprint information to text file {}",dump_fn);
 	fps.dump_to_file(dump_fn)?;
     }
 
@@ -153,6 +176,9 @@ fn main()->Result<(),Box<dyn Error>> {
     }
 
     if let Some(export_fn) = args.value_of("export") {
+	info!("Exporting as GeoJSON to {}, pretty printing: {}",
+	      export_fn,
+	      pretty);
 	fps.export_geojson(pretty,export_fn)?;
     }
 

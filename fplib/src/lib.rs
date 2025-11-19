@@ -7,7 +7,11 @@ use chrono::{Utc,TimeZone};
 use geojson::{Feature,FeatureCollection,Geometry,Value};
 use serde_json::{Map,to_value};
 
-mod minisvg;
+pub use geo;
+
+pub mod amcut;
+pub mod minisvg;
+pub mod poly_utils;
 
 use minisvg::MiniSVG;
 
@@ -144,32 +148,41 @@ pub fn dump_to_file<P:AsRef<Path>>(footprints:&[Footprint],
 				   path:P)->Result<()> {
     let fd = File::create(path)?;
     let mut buf = BufWriter::new(fd);
-    let m = footprints.len();
 
-    for ifp in 0..m {
+    for (ifp,fp) in footprints.iter().enumerate() {
+	let Footprint {
+	    orbit,
+	    id,
+	    platform,
+	    instrument,
+	    time_interval:(t0,t1),
+	    outline
+	} = fp;
 	writeln!(buf,"Footprint {}",ifp)?;
-	let fp = &footprints[ifp];
-	writeln!(buf,"  ID {}",fp.id)?;
-	let npoly = fp.outline.len();
+	writeln!(buf,"  ID {}",id)?;
+	writeln!(buf,"  Orbit {}",orbit)?;
+	writeln!(buf,"  Platform {}",platform)?;
+	writeln!(buf,"  Instrument {}",instrument)?;
+	writeln!(buf,"  Start time {}",t0)?;
+	writeln!(buf,"  End time {}",t1)?;
+	let npoly = outline.len();
 	writeln!(buf,"  Number of polygons: {}",npoly)?;
-	for ipoly in 0..npoly {
-	    let poly = &fp.outline[ipoly];
+	for (ipoly,poly) in outline.iter().enumerate() {
 	    let nring = poly.len();
 	    writeln!(buf,"  Polygon {}",ipoly)?;
 	    writeln!(buf,"    Number of rings: {}",nring)?;
-	    for iring in 0..nring {
-		let ring = &poly[iring];
+	    for (iring,ring) in poly.iter().enumerate() {
 		let nvert = ring.len();
 		writeln!(buf,"    Ring {} of polygon {}",iring,ipoly)?;
 		writeln!(buf,"      Number of vertices: {}",nvert)?;
 		writeln!(buf,"        {:4} {:4} {:4} {:10} {:10}","Poly","Ring","Vert","Lon","Lat")?;
-		for ivert in 0..nvert {
+		for (ivert,vert) in ring.iter().enumerate() {
 		    writeln!(buf,"        {:4} {:4} {:4} {:+10.3} {:+10.3}",
 			     ipoly,
 			     iring,
 			     ivert,
-			     ring[ivert].0,
-			     ring[ivert].1)?;
+			     vert.0,
+			     vert.1)?;
 		}
 		writeln!(buf,"    End of ring {} of polygon {}",iring,ipoly)?;
 	    }
@@ -200,11 +213,14 @@ pub fn export_geojson<P:AsRef<Path>,F:FootprintLike>(
 	    for poly in fp.outline().iter() {
 		let mut gjpoly : Vec<Vec<Vec<f64>>> = Vec::new();
 		for ring in poly.iter() {
-		    let gjring : Vec<Vec<f64>> = 
+		    let mut gjring : Vec<Vec<f64>> = 
 			ring
 			.iter()
 			.map(|&(x,y)| vec![x,y])
 			.collect();
+		    if let Some(p) = gjring.last() {
+			gjring.push(p.clone());
+		    }
 		    gjpoly.push(gjring);
 		}
 		gjmpoly.push(gjpoly);
