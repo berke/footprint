@@ -5,14 +5,26 @@ version.workspace = true
 description.workspace = true
 license.workspace = true
 
+[features]
+stac = ["dep:stac","dep:stac-io","dep:serde_json","dep:geojson"]
+
 [dependencies]
 footprint = { workspace = true }
 clap = { version = "^2.33" }
 log = { version = "^0.4" }
 simple_logger = { version = "^5" }
 chrono = { workspace = true }
+stac-io = { optional = true, version = "^0.2.3" }
+stac = { optional = true, version = "^0.16.1" }
 anyhow.workspace = true
+serde_json = { optional = true, workspace = true }
+geojson = { optional = true, workspace = true }
 
 [[bin]]
 name = "fptool"
 path = "src/fptool.rs"
+
+[[bin]]
+name = "stac2fp"
+path = "src/stac2fp.rs"
+required-features = ["stac"]

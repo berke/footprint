@@ -42,6 +42,13 @@ impl Stats {
     }
 }
 
+fn timestamp_from_str(u:&str)->Result<f64> {
+    let ndt : NaiveDateTime =
+        NaiveDateTime::parse_from_str(u,"%Y-%m-%dT%H:%M:%S")?;
+    let ts : DateTime<_> = Utc.from_utc_datetime(&ndt);
+    Ok(ts.timestamp_millis() as f64 / 1000.0)
+}
+
 fn main()->Result<()> {
     let args = App::new("fptool")
 	.arg(Arg::with_name("input").multiple(true))
@@ -92,19 +99,11 @@ fn main()->Result<()> {
     let mut lon_stats = Stats::new();
 
     let t_min =
-	if let Some(ts) = args.value_of("t_min") {
-	    DateTime::<Utc>::from_utc(NaiveDateTime::parse_from_str(ts,"%Y-%m-%dT%H:%M:%S")?,Utc)
-		.timestamp_millis() as f64 / 1000.0
-	} else {
-	    0.0
-	};
+        args.value_of("t_min").map(timestamp_from_str).transpose()?
+        .unwrap_or(0.0);
     let t_max =
-	if let Some(ts) = args.value_of("t_max") {
-	    DateTime::<Utc>::from_utc(NaiveDateTime::parse_from_str(ts,"%Y-%m-%dT%H:%M:%S")?,Utc)
-		.timestamp_millis() as f64 / 1000.0
-	} else {
-	    std::f64::INFINITY
-	};
+        args.value_of("t_max").map(timestamp_from_str).transpose()?
+        .unwrap_or(std::f64::INFINITY);
 
     let decimate : usize = args.value_of("decimate")
 	.unwrap()
