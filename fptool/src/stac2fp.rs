@@ -1,5 +1,7 @@
 #![allow(dead_code)]
 
+mod stats;
+
 use anyhow::{
     anyhow,
     bail,
@@ -36,6 +38,7 @@ use std::{
 use serde_json::{
     Value
 };
+use stats::Stats;
 
 fn load_json<P:AsRef<Path>>(path:P)->Result<Value> {
     let mut fd = File::open(path)?;
@@ -58,6 +61,10 @@ fn outline_from_geojson_value(v:&geojson::Value)->Result<Vec<Vec<Vec<(f64,f64)>>
         },
         _ => bail!("Unsupported geometry type")
     }
+}
+
+fn f64_of_dt(dt:DateTime<Utc>)->f64 {
+    dt.timestamp_millis() as f64/1e3
 }
 
 fn main()->Result<()> {
@@ -99,15 +106,63 @@ fn main()->Result<()> {
 
     let mut footprints = Vec::new();
 
-    for (ifeat,feat) in features.drain(..).enumerate() {
-        let it : Item = serde_json::from_value(feat)?;
+    let items : Result<Vec<Item>,_> =
+        features.drain(..).map(|feat| serde_json::from_value(feat))
+        .collect();
+    let mut items = items?;
+
+    let mut ts : Vec<f64> = items
+        .iter()
+        .filter_map(|it| it.properties.datetime.map(f64_of_dt))
+        .collect();
+    ts.sort_by(f64::total_cmp);
+
+    let mut dt_est = None;
+
+    // Figure out observation length
+    let mut dt_stats = Stats::new();
+    for tt in ts.windows(2) {
+        if let [t1,t2] = tt {
+            dt_stats.add(t2 - t1);
+        }
+    }
+
+    const DT_THRESHOLD : f64 = 0.01;
+    if dt_stats.count() > 0 {
+        let (dt_min,dt_mean,dt_max) = dt_stats.summary();
+        info!("Observation interval: {} {} {}",
+            dt_min,
+            dt_mean,
+            dt_max);
+        if (dt_max - dt_min) / dt_mean < DT_THRESHOLD {
+            dt_est = Some(dt_mean);
+        } else {
+            warn!("Observation interval not good");
+        }
+    } else {
+        warn!("Could not determine observation interval");
+    }
+
+    for it in items.drain(..) {
         if let Some(geo) = &it.geometry {
-            let t0 = it.properties.start_datetime
-                .map(|dt| dt.timestamp_millis() as f64/1e3)
-                .unwrap_or(0.0);
-            let t1 = it.properties.end_datetime
-                .map(|dt| dt.timestamp_millis() as f64/1e3)
-                .unwrap_or(0.0);
+            // See if we have precise start and end times
+            let t0_opt = it.properties.start_datetime.map(f64_of_dt);
+            let t1_opt = it.properties.end_datetime.map(f64_of_dt);
+            let (t0,t1) =
+                if let (Some(t0),Some(t1)) =
+                    (it.properties.start_datetime.map(f64_of_dt),
+                    it.properties.end_datetime.map(f64_of_dt))
+                {
+                    (t0,t1)
+                } else if let Some(t0) =
+                    it.properties.datetime.map(f64_of_dt)
+                {
+                    (t0,t0 + dt_est.unwrap_or(0.0))
+                } else {
+                    warn!("Cannot get times");
+                    (0.0,0.0)
+                };
+
             let platform =
                 it.properties.additional_fields.get("platform")
                 .and_then(|p| p.as_str())
