@@ -50,21 +50,27 @@ impl FootprintLike for Footprint {
     fn outline(&self)->&Vec<Vec<Vec<(f64,f64)>>> { &self.outline }
 }
 
+impl Default for Footprint {
+    fn default()->Self {
+        Self{
+            orbit:0,
+            id:String::new(),
+            platform:String::new(),
+            instrument:String::new(),
+            time_interval:(0.0,0.0),
+            outline:Vec::new()
+        }
+    }
+}
+
 impl Footprint {
     pub fn new()->Self {
-	Self{
-	    orbit:0,
-	    id:String::new(),
-	    platform:String::new(),
-	    instrument:String::new(),
-	    time_interval:(0.0,0.0),
-	    outline:Vec::new()
-	}
+        Self::default()
     }
 
     pub fn min_coords(&self)->(f64,f64) {
 	self.outline.iter().fold(
-	    (std::f64::INFINITY,std::f64::INFINITY),
+	    (f64::INFINITY,f64::INFINITY),
 	    |curr,poly|
 	    poly.iter().fold(curr,
 			     |curr2,ring|
@@ -75,7 +81,7 @@ impl Footprint {
 
     pub fn max_coords(&self)->(f64,f64) {
 	self.outline.iter().fold(
-	    (std::f64::NEG_INFINITY,std::f64::NEG_INFINITY),
+	    (f64::NEG_INFINITY,f64::NEG_INFINITY),
 	    |curr,poly|
 	    poly.iter().fold(curr,
 			     |curr2,ring|
@@ -85,7 +91,7 @@ impl Footprint {
     }
 }
 
-#[derive(Debug,Clone,Serialize,Deserialize)]
+#[derive(Default,Debug,Clone,Serialize,Deserialize)]
 pub struct Footprints {
     pub footprints:Vec<Footprint>
 }

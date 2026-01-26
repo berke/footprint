@@ -74,7 +74,7 @@ fn main()->Result<()> {
         .unwrap_or(0.0);
     let t_max =
         args.value_of("t_max").map(timestamp_from_str).transpose()?
-        .unwrap_or(std::f64::INFINITY);
+        .unwrap_or(f64::INFINITY);
 
     let decimate : usize = args.value_of("decimate")
 	.unwrap()

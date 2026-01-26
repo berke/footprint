@@ -15,7 +15,7 @@ pub fn segment_crosses_antimeridian((x0,_y0):(f64,f64),(x1,_y1):(f64,f64))->bool
     x0.signum() != x1.signum() && (x1 - x0).abs() >= threshold
 }
 
-pub fn crosses_antimeridian(ring:&Vec<(f64,f64)>)->bool {
+pub fn crosses_antimeridian(ring:&[(f64,f64)])->bool {
     let m = ring.len();
     for i in 0..m {
 	let iprev =
@@ -50,10 +50,10 @@ pub fn cut_and_push(outline:&mut Vec<Vec<Vec<(f64,f64)>>>,ring:Vec<(f64,f64)>)->
 	let f_west = |(x,y)| if x >= 180.0 { (x - 360.0,y) } else { (x,y) };
 
 	for p in poly_east.iter() {
-	    outline.push(vec![poly_utils::ring_to_vec(&p,f_east)]);
+	    outline.push(vec![poly_utils::ring_to_vec(p,f_east)]);
 	}
 	for p in poly_west.iter() {
-	    outline.push(vec![poly_utils::ring_to_vec(&p,f_west)]);
+	    outline.push(vec![poly_utils::ring_to_vec(p,f_west)]);
 	}
 	true
     }

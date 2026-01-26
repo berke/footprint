@@ -32,11 +32,11 @@ pub fn clip_to_roi(roi:&Polygon<f64>,mp:&MultiPolygon<f64>)->Option<MultiPolygon
     for p in mp.iter() {
 	if roi.intersects(p) {
 	    let inter = roi.intersection(p,FACTOR);
-	    let mut inter : Vec<Polygon<f64>> = inter.iter().map(|x| x.clone()).collect();
+	    let mut inter : Vec<Polygon<f64>> = inter.iter().cloned().collect();
 	    res.append(&mut inter);
 	}
     }
-    if res.len() > 0 {
+    if !res.is_empty() {
 	let mp_out : MultiPolygon<f64> = res.into();
 	Some(mp_out)
     } else {
@@ -55,12 +55,12 @@ pub fn rectangle((lon0,lat0):(f64,f64),(lon1,lat1):(f64,f64))->Polygon<f64> {
 	vec![])
 }
 
-pub fn ring_to_polygon(ring:&Vec<(f64,f64)>)->Polygon<f64> {
-    let exterior : LineString<f64> = ring.clone().into();
+pub fn ring_to_polygon(ring:&[(f64,f64)])->Polygon<f64> {
+    let exterior : LineString<f64> = ring.to_vec().into();
     Polygon::new(exterior,vec![])
 }
 
-pub fn outline_to_multipolygon(outline:&Vec<Vec<Vec<(f64,f64)>>>)->MultiPolygon<f64> {
+pub fn outline_to_multipolygon(outline:&[Vec<Vec<(f64,f64)>>])->MultiPolygon<f64> {
     let mut u = Vec::new();
     // f.outline: Vec<Vec<Vec<(f64,f64)>>>
     // f.outline.iter(): &Vec<Vec<(f64,f64)>>
@@ -80,7 +80,7 @@ pub fn outline_to_multipolygon(outline:&Vec<Vec<Vec<(f64,f64)>>>)->MultiPolygon<
     MultiPolygon::from(u)
 }
 
-pub fn outline_points(outline:&Vec<Vec<Vec<(f64,f64)>>>)->Vec<(f64,f64)> {
+pub fn outline_points(outline:&[Vec<Vec<(f64,f64)>>])->Vec<(f64,f64)> {
     let mut pts = Vec::new();
     for poly in outline.iter() {
 	for ring in poly.iter() {
