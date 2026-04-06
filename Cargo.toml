@@ -3,7 +3,7 @@ resolver = "2"
 members = ["fplib","fptool"]
 
 [workspace.package]
-version = "0.2.4"
+version = "0.2.5"
 authors = ["Berke DURAK <bd@exhrd.fr>"]
 license = "Apache-2.0 OR MIT"
 readme = "README.md"

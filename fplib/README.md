@@ -15,6 +15,7 @@ form.
 
 # Changes
 
+- 0.2.5: Update rpm-serde version due to compilation issues
 - 0.2.4: Include antimeridian-cutting routine and expose geo crate
 - 0.2.3: Update depdendencies
 - 0.2: Use anyhow for errors, reorganize into workspace
