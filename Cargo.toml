@@ -18,7 +18,7 @@ ron = { version = "^0.12" }
 json = { version = "^0.12" }
 chrono = { version = "^0.4" }
 serde_json = { version = "^1.0" }
-rmp-serde = { version = "0.15.5" }
+rmp-serde = { version = "1.3.1" }
 geo = { version = "^0.31" }
 geo-clipper = { version = "^0.9" }
 geojson = { version = "^0.24" }
